@@ -10,11 +10,13 @@ VALUES
 INSERT INTO role (title, salary, department_id)
 VALUES
   ('Customer Service', 55000, 1),
-  ('Recruiter', 75000, 2),
-  ('Account Manager', 90000, 3),
-  ('Accountant', 150000, 4),
-  ('Developer', 160000, 5),
-  ('Engineer', 160000, 6);
+  ('Recruiter', 75000, 6),
+  ('Account Manager', 90000, 1),
+  ('Accountant', 150000, 3),
+  ('Lawyer', 200000, 5),
+  ('Social Media Strategist', 90000, 2),
+  ('Developer', 160000, 4),
+  ('Engineer', 160000, 4);
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES
