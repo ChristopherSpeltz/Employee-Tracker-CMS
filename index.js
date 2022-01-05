@@ -46,14 +46,14 @@ const mainMenu = () => {
         // case "Add An Employee":
         //   newEmployee();
         //   break;
-        // case "Update An Employee Role":
-        //   updateEmployeeRole();
-        //   break;
-        // case "Quit":
-        //   quit();
-        //   break;
-        // default:
-        //   console.log("Main Menu");
+        case "Update An Employee Role":
+          updateEmployeeRole();
+          break;
+        case "Quit":
+          quit();
+          break;
+        default:
+          console.log("Main Menu");
       }
     });
 };
@@ -65,12 +65,12 @@ const queryDepartments = () => {
   FROM department
   `;
 
-  db.query(sql, (err, data) => {
+  db.query(sql, (err, res) => {
     if (err) {
       console.log(err);
       return;
     }
-    console.table(data);
+    console.table(res);
     mainMenu();
   });
 };
@@ -84,12 +84,12 @@ const queryRoles = () => {
   ON department_id = department.id;
   `;
 
-  db.query(sql, (err, data) => {
+  db.query(sql, (err, res) => {
     if (err) {
       console.log(err);
       return;
     }
-    console.table(data);
+    console.table(res);
     mainMenu();
   });
 };
@@ -102,12 +102,12 @@ const queryEmployees = () => {
   JOIN department ON department.id = role.department_id;
   `;
 
-  db.query(sql, (err, data) => {
+  db.query(sql, (err, res) => {
     if (err) {
       console.log(err);
       return;
     }
-    console.table(data);
+    console.table(res);
     mainMenu();
   });
 };
@@ -158,18 +158,18 @@ const newRole = () => {
         {
           type: "input",
           name: "title",
-          message: chalk.yellow(`Please add name of new role.`)
+          message: chalk.yellow(`Please add name of new role.`),
         },
         {
           type: "input",
           name: "salary",
-          message: chalk.yellow(`Enter yearly salary for new role.`)
+          message: chalk.yellow(`Enter yearly salary for new role.`),
         },
         {
           type: "list",
           name: "role",
           message: chalk.yellow(`Enter department role will be apart of.`),
-          choices: depList
+          choices: depList,
         },
       ])
       .then((data) => {
@@ -191,7 +191,6 @@ const newRole = () => {
 // WHEN I choose to add an employee
 // THEN I am prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
 const newEmployee = () => {
-
   inquirer.prompt([
     {
       type: "input",
@@ -220,9 +219,79 @@ const newEmployee = () => {
 
 // WHEN I choose to update an employee role
 // THEN I am prompted to select an employee to update and their new role and this information is updated in the database
+const updateEmployeeRole = () => {
+  db.query(`SELECT * FROM employee;`, (err, data) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    db.query(`SELECT * FROM role;`, (err, roles) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
 
+      const employeeList = data.map(
+        (nameList) =>
+          `${nameList.id}: ${nameList.first_name} ${nameList.last_name} `
+      );
+      const roleList = roles.map((list) => ({
+        name: list.title,
+        value: list.id,
+      }));
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            name: "EmployeeUpdate",
+            message: chalk.yellow(
+              `Which employee's role would you like to update?`
+            ),
+            choices: employeeList,
+          },
+          {
+            type: "list",
+            name: "roleUpdate",
+            message: chalk.yellow(
+              `Please select new role.`
+            ),
+            choices: roleList,
+          },
+        ])
+
+        .then((updateResponse) => {
+          db.query(
+            `UPDATE employee SET role_id = ? WHERE id = ?`,
+            [
+              updateResponse.roleUpdate,
+              updateResponse.EmployeeUpdate.split(": ")[0],
+            ],
+            (err) => {
+              if (err) {
+                console.log(err);
+              } else
+              console.log(
+                chalk.red(
+                  `Employee role update complete!`
+                )
+              );
+              mainMenu();
+            }
+          );
+        });
+    });
+  });
+};
+
+
+const quit = () => {
+  console.log(
+    chalk.white(
+      figlet.textSync("Application Closed", { horizontalLayout: "full" })
+    )
+  );
+  process.exit();
+};
 
 mainMenu();
-// .then(answers => {
-//   console.log(answers)
-// })
+
