@@ -1,5 +1,4 @@
 const inquirer = require("inquirer");
-// const cTable = require("console.table");
 const chalk = require("chalk");
 var figlet = require("figlet");
 const db = require("./db/connection");
@@ -43,9 +42,9 @@ const mainMenu = () => {
         case "Add A Role":
           newRole();
           break;
-        // case "Add An Employee":
-        //   newEmployee();
-        //   break;
+        case "Add An Employee":
+          newEmployee();
+          break;
         case "Update An Employee Role":
           updateEmployeeRole();
           break;
@@ -188,33 +187,72 @@ const newRole = () => {
   });
 };
 
+
+
 // WHEN I choose to add an employee
 // THEN I am prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
 const newEmployee = () => {
-  inquirer.prompt([
-    {
-      type: "input",
-      name: "firstName",
-      message: chalk.yellow(`Please enter employee's first name?`),
-    },
-    {
-      type: "input",
-      name: "lastName",
-      message: chalk.yellow(`Please enter employee's last name?`),
-    },
-    {
-      type: "list",
-      name: "title",
-      message: chalk.yellow(`Please enter employee's title?`),
-    },
-    {
-      type: "list",
-      name: "manager",
-      message: chalk.yellow(`Please enter employee's manager?`),
-    },
-  ]);
-  console.log(chalk.red("A new employee was added to the database"));
-  mainMenu();
+  db.query(
+    `SELECT * FROM role
+  JOIN employee ON employee.id = role.id`,
+    (err, dbQuery) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      const roleData = dbQuery.map((role) => ({
+        name: role.title,
+        value: role.id,
+      }));
+      const managerList = dbQuery.map((employeeManager) => ({
+        name: employeeManager.last_name,
+        value: employeeManager.manager_id,
+      }));
+
+      inquirer
+        .prompt([
+          {
+            type: "input",
+            name: "firstName",
+            message: chalk.yellow(`Please enter employee's first name.`),
+            
+          },
+          {
+            type: "input",
+            name: "lastName",
+            message: chalk.yellow(`Please enter employee's last name.`),
+            
+          },
+          {
+            type: "list",
+            name: "title",
+            message: chalk.yellow(`Please enter employee's title`),
+            choices: roleData,
+          },
+          {
+            type: "list",
+            name: "manager",
+            message: chalk.yellow(`Please select employee's manager.`),
+            choices: managerList,
+          },
+        ])
+        .then((newData) => {
+          db.query(
+            "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)",
+            [newData.firstName, newData.lastName, newData.title, newData.manager],
+            (err) => {
+              if (err) {
+                console.log(err);
+              }
+              console.log(
+                chalk.red("A new employee was added to the database")
+              );
+              mainMenu();
+            }
+          );
+        });
+    }
+  );
 };
 
 // WHEN I choose to update an employee role
@@ -252,9 +290,7 @@ const updateEmployeeRole = () => {
           {
             type: "list",
             name: "roleUpdate",
-            message: chalk.yellow(
-              `Please select new role.`
-            ),
+            message: chalk.yellow(`Please select new role.`),
             choices: roleList,
           },
         ])
@@ -269,12 +305,7 @@ const updateEmployeeRole = () => {
             (err) => {
               if (err) {
                 console.log(err);
-              } else
-              console.log(
-                chalk.red(
-                  `Employee role update complete!`
-                )
-              );
+              } else console.log(chalk.red(`Employee role update complete!`));
               mainMenu();
             }
           );
@@ -282,7 +313,6 @@ const updateEmployeeRole = () => {
     });
   });
 };
-
 
 const quit = () => {
   console.log(
@@ -294,4 +324,3 @@ const quit = () => {
 };
 
 mainMenu();
-
